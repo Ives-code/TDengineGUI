@@ -105,7 +105,8 @@ new Vue({
                 0: '0',
                 365: '365',
                 36500: '36500'
-            }
+            },
+            selectedSQL: '', // 添加选中的 SQL 存储
         }
     },
     methods: {
@@ -907,8 +908,47 @@ new Vue({
                 return this.tableLabelItems.fields ? this.tableLabelItems.fields.indexOf(item) == -1 : false;
             })
             this.tableFilter.fields = newFields
-        }
+        },
+        handleSelect(event) {
+            // 获取选中的文本
+            const textarea = event.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            this.selectedSQL = this.consoleInput.substring(start, end);
+        },
+        executeSQL() {
+            // 如果有选中的文本，执行选中的部分；否则执行全部
+            const sqlToExecute = this.selectedSQL || this.consoleInput;
+            if (!sqlToExecute.trim()) {
+                this.$message({
+                    message: 'SQL语句不能为空',
+                    type: 'warning',
+                    duration: 1000
+                });
+                return;
+            }
 
+            let payload = {
+                ip: this.theLink.host,
+                port: this.theLink.port,
+                user: this.theLink.user,
+                password: this.theLink.password
+            }
+
+            TaosRestful.rawSql(sqlToExecute, payload).then(data => {
+                if (data.res) {
+                    this.consoleResult = data;
+                } else {
+                    this.$message({
+                        message: data.msg,
+                        type: 'error',
+                        duration: 1000
+                    });
+                }
+                // 清除选中的 SQL
+                this.selectedSQL = '';
+            })
+        },
     }
 })
 

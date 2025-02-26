@@ -517,19 +517,52 @@
                     </el-container>
                 </el-tab-pane>
                 <el-tab-pane label="控制台" name="3">
-                    <div class="consoleWrapper">
-                        <el-input placeholder="请输入内容" v-model="consoleInput">
-                            <template slot="prepend">SQL:</template>
-                            <el-button slot="append" icon="el-icon-s-promotion" @click="sendSQL">执行</el-button>
-                        </el-input>
+                    <div class="consoleWrapper" @keyup.f5.prevent="executeSQL">
+                        <div class="console-input-wrapper">
+                            <el-input
+                                type="textarea"
+                                :rows="5"
+                                placeholder="请输入 SQL 语句（按 F5 执行，选中后执行选中内容）"
+                                v-model="consoleInput"
+                                @keyup.f5.native.prevent="executeSQL"
+                                @select.native="handleSelect">
+                            </el-input>
+                            <el-button class="console-execute-btn" icon="el-icon-s-promotion" @click="executeSQL">执行</el-button>
+                        </div>
                         <div class="resultPlace">
-                            <!-- <el-input :rows='1000' type="textarea" placeholder="运行结果" v-model="consoleResult" :disabled="true"></el-input> -->
-                            <div style="height:99%;overflow-y:auto" class="resultPlaceTitle">
-                                <el-link :underline="false" icon="el-icon-document-copy"
-                                         v-clipboard:copy="JSON.stringify(consoleResult, null, 4)"
-                                         v-clipboard:success="clipboardSuccess" style="float:right;margin-right: 10px">复制</el-link>
-                                <pre>{{ JSON.stringify(consoleResult, null, 4) }}</pre>
-                            </div>
+                            <el-tabs type="border-card">
+                                <el-tab-pane label="JSON视图">
+                                    <div style="height:99%;overflow-y:auto" class="resultPlaceTitle">
+                                        <el-link :underline="false" icon="el-icon-document-copy"
+                                                v-clipboard:copy="JSON.stringify(consoleResult, null, 4)"
+                                                v-clipboard:success="clipboardSuccess" style="float:right;margin-right: 10px">复制</el-link>
+                                        <pre>{{ JSON.stringify(consoleResult, null, 4) }}</pre>
+                                    </div>
+                                </el-tab-pane>
+                                <el-tab-pane label="表格视图">
+                                    <div style="height:99%;overflow-y:auto" class="table-view">
+                                        <div class="table-info">
+                                            <span class="total-count">总行数：{{ consoleResult && consoleResult.data ? consoleResult.data.length : 0 }}</span>
+                                        </div>
+                                        <el-table
+                                            v-if="consoleResult && consoleResult.data"
+                                            :data="consoleResult.data"
+                                            border
+                                            :max-height="500"
+                                            style="width: 100%"
+                                            @keyup.native.f5.prevent="executeSQL">
+                                            <el-table-column
+                                                v-for="(value, key) in consoleResult.data[0]"
+                                                :key="key"
+                                                :prop="key"
+                                                :label="key"
+                                                :min-width="150"
+                                                show-overflow-tooltip>
+                                            </el-table-column>
+                                        </el-table>
+                                    </div>
+                                </el-tab-pane>
+                            </el-tabs>
                         </div>
                     </div>
                 </el-tab-pane>
